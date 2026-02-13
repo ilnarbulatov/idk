@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine Challenge 🤨</title>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            height: 100vh; width: 100vw;
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            overflow: hidden; font-family: 'Montserrat', sans-serif;
+        }
+
+        #welcomeText { position: absolute; top: 10%; text-align: center; z-index: 10; }
+        #welcomeText h1 { font-family: 'Caveat', cursive; font-size: 56px; color: #fff; text-shadow: 2px 2px 15px rgba(0,0,0,0.2); }
+        
+        #timerDisplay { 
+            position: absolute; top: 10%; font-size: 24px; color: #fff; 
+            font-weight: 600; display: none; z-index: 10; background: rgba(0,0,0,0.2);
+            padding: 10px 20px; border-radius: 50px; backdrop-filter: blur(5px);
+        }
+
+        .mail-wrapper {
+            position: relative; width: 240px; height: 160px; background: #fff;
+            border-radius: 15px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            display: flex; justify-content: center; align-items: center; 
+            cursor: pointer; z-index: 5; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .mail-wrapper.hide { transform: scale(0); opacity: 0; pointer-events: none; }
+
+        .letter {
+            position: relative; width: 450px; height: 320px;
+            background: #fff; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: none; flex-direction: column; align-items: center; 
+            padding: 40px; z-index: 15;
+        }
+        .letter.show { display: flex; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+        .letter h2 { font-family: 'Caveat', cursive; color: #8e44ad; font-size: 38px; margin-bottom: 20px; text-align: center; }
+
+        .btn-area { 
+            position: relative; width: 100%; height: 150px; 
+            margin-top: 20px; border: 2px dashed #fbc2eb; border-radius: 20px;
+        }
+
+        button { 
+            padding: 12px 28px; border: none; border-radius: 50px; 
+            cursor: pointer; font-weight: 600; font-size: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        #yesBtn { background: #8e44ad; color: white; position: absolute; left: 30%; top: 50%; transform: translate(-50%, -50%); z-index: 20; }
+        #noBtn { background: #fbc2eb; color: #8e44ad; position: absolute; left: 70%; top: 50%; transform: translate(-50%, -50%); transition: 0.15s; z-index: 21; }
+
+        /* СОМНИТЕЛЬНЫЙ СКРИМЕР */
+        #screamer {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255, 255, 255, 0.95); display: none; justify-content: center; align-items: center;
+            flex-direction: column; z-index: 100; text-align: center;
+        }
+        #screamer span { font-size: 250px; animation: shake 0.1s infinite; display: block; }
+        #screamer h2 { font-size: 32px; color: #333; margin-top: 20px; font-family: 'Montserrat', sans-serif; }
+
+        @keyframes shake {
+            0% { transform: translate(3px, 2px) rotate(0deg); }
+            20% { transform: translate(-3px, -2px) rotate(-1deg); }
+            40% { transform: translate(-5px, 1px) rotate(1deg); }
+            60% { transform: translate(3px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -1px) rotate(0deg); }
+        }
+
+        .emoji-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+        .emoji-rain span { position: absolute; bottom: 100%; animation: fall 3s linear forwards; }
+        @keyframes fall { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(110vh); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="welcomeText"><h1>Тебе письмо! ✨</h1></div>
+    <div id="timerDisplay">Успей ответить: ⏳ <span id="seconds">10</span> сек.</div>
+
+    <div class="mail-wrapper" id="mailWrapper" onclick="openLetter()">
+        <div style="font-size: 70px;">💌</div>
+    </div>
+
+    <div class="letter" id="letter">
+        <h2 id="question">Будешь моей? 💜</h2>
+        <div class="btn-area" id="btnArea">
+            <button id="yesBtn" onclick="celebrate()">Да!</button>
+            <button id="noBtn" onmouseover="moveButton()">Нет</button>
+        </div>
+    </div>
+
+    <!-- Скример 🤨 -->
+    <div id="screamer">
+        <span>🤨</span>
+        <h2>Мда... Слишком долго... <br> Сомнительно, но окэй.</h2>
+        <button onclick="location.reload()" style="margin-top: 30px; background: #8e44ad; color: #fff;">ЕЩЁ РАЗ 🔄</button>
+    </div>
+
+    <div class="emoji-rain" id="emojiRain"></div>
+
+    <script>
+        const heartEmojis = ['💜', '💖', '✨', '🌸'];
+        const laughEmojis = ['🤣', '🤨', '🙄', '🤭'];
+        let timeLeft = 10;
+        let timerStarted = false;
+        let laughInterval = null;
+
+        function openLetter() {
+            document.getElementById("welcomeText").style.display = "none";
+            document.getElementById("mailWrapper").classList.add("hide");
+            document.getElementById("letter").classList.add("show");
+            document.getElementById("timerDisplay").style.display = "block";
+            startTimer();
+        }
+
+        function startTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
+            const timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    document.getElementById("seconds").innerText = timeLeft;
+                }
+                if (timeLeft === 0) {
+                    clearInterval(timerInterval);
+                    triggerScreamer();
+                }
+            }, 1000);
+        }
+
+        function moveButton() {
+            const noBtn = document.getElementById("noBtn");
+            const area = document.getElementById("btnArea");
+            const maxX = area.clientWidth - noBtn.clientWidth;
+            const maxY = area.clientHeight - noBtn.clientHeight;
+            
+            noBtn.style.left = Math.random() * maxX + 'px';
+            noBtn.style.top = Math.random() * maxY + 'px';
+            noBtn.style.transform = 'none';
+
+            if (!laughInterval) {
+                laughInterval = setInterval(() => createEmoji(laughEmojis), 200);
+            }
+        }
+
+        function triggerScreamer() {
+            if (timeLeft === -999) return;
+            document.getElementById("screamer").style.display = "flex";
+            clearInterval(laughInterval);
+        }
+
+        function celebrate() {
+            timeLeft = -999; // Останавливаем таймер
+            clearInterval(laughInterval);
+            
+            document.getElementById("timerDisplay").style.display = "none";
+            document.getElementById("question").innerHTML = "УРА! Я ТАК И ЗНАЛ! 😍💜";
+            document.getElementById("noBtn").style.display = "none";
+            
+            const yesBtn = document.getElementById("yesBtn");
+            yesBtn.style.left = "50%"; 
+            yesBtn.style.top = "50%";
+            yesBtn.style.transform = "translate(-50%, -50%) scale(1.3)"; // Уменьшенный размер
+            yesBtn.innerHTML = "ЛЮБЛЮ ✨";
+            yesBtn.disabled = true;
+            
+            setInterval(() => createEmoji(heartEmojis), 120);
+        }
+
+        function createEmoji(list) {
+            const container = document.getElementById("emojiRain");
+            const span = document.createElement("span");
+            span.innerHTML = list[Math.floor(Math.random() * list.length)];
+            span.style.left = Math.random() * 100 + "vw";
+            span.style.fontSize = "30px";
+            container.appendChild(span);
+            setTimeout(() => span.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
